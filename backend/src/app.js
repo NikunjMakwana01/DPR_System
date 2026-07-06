@@ -14,7 +14,7 @@ app.set('trust proxy', true);
 
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173' || 'https://dpr-system.vercel.app/',
+  origin: process.env.CLIENT_URL || 'https://dpr-system.vercel.app/'|| 'http://localhost:5173',
   credentials: true,
 }));
 app.use(morgan('dev'));
