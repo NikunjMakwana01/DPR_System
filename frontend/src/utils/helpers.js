@@ -36,3 +36,13 @@ export const getInitials = (name) => {
     .toUpperCase()
     .slice(0, 2);
 };
+
+export const getProfilePhotoUrl = (profilePhoto) => {
+  if (!profilePhoto) return null;
+  if (profilePhoto.startsWith('http://') || profilePhoto.startsWith('https://')) {
+    return profilePhoto;
+  }
+  const apiUrl = import.meta.env.VITE_API_URL || 'https://dpr-system.onrender.com/api';
+  const baseUrl = apiUrl.replace(/\/api\/?$/, '');
+  return `${baseUrl}${profilePhoto.startsWith('/') ? profilePhoto : `/${profilePhoto}`}`;
+};

@@ -2,7 +2,7 @@ import { Menu, Moon, Sun, Bell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
-import { getInitials } from '../../utils/helpers';
+import { getInitials, getProfilePhotoUrl } from '../../utils/helpers';
 
 export default function Navbar({ onMenuClick, notificationCount = 0 }) {
   const { user, isAdmin } = useAuth();
@@ -49,7 +49,7 @@ export default function Navbar({ onMenuClick, notificationCount = 0 }) {
           </div>
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-600 text-sm font-medium text-white">
             {user?.profilePhoto ? (
-              <img src={user.profilePhoto} alt="" className="h-9 w-9 rounded-full object-cover" />
+              <img src={getProfilePhotoUrl(user.profilePhoto)} alt="" className="h-9 w-9 rounded-full object-cover" />
             ) : (
               getInitials(user?.fullName)
             )}

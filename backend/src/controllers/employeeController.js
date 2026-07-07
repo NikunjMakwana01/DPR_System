@@ -4,6 +4,7 @@ const Assignment = require('../models/Assignment');
 const DPR = require('../models/DPR');
 const { Parser } = require('json2csv');
 const { logActivity, createNotification } = require('../utils/helpers');
+const { isConfigured, uploadProfilePhoto, deleteByUrl } = require('../config/cloudinary');
 
 exports.getEmployees = async (req, res) => {
   const { search, status, department, page = 1, limit = 10 } = req.query;
@@ -174,7 +175,20 @@ exports.updateProfile = async (req, res) => {
 
   if (mobileNumber) user.mobileNumber = mobileNumber;
   if (password) user.password = password;
-  if (req.file) user.profilePhoto = `/uploads/${req.file.filename}`;
+
+  if (req.file) {
+    if (!isConfigured()) {
+      return res.status(503).json({
+        success: false,
+        message: 'Image upload is not configured. Set Cloudinary environment variables on the server.',
+      });
+    }
+
+    const previousPhoto = user.profilePhoto;
+    const result = await uploadProfilePhoto(req.file);
+    user.profilePhoto = result.secure_url;
+    await deleteByUrl(previousPhoto);
+  }
 
   await user.save();
 

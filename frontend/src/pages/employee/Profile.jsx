@@ -7,7 +7,7 @@ import Card from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
 import StatusBadge from "../../components/ui/StatusBadge";
-import { getInitials } from "../../utils/helpers";
+import { getInitials, getProfilePhotoUrl } from "../../utils/helpers";
 import { Camera } from "lucide-react";
 
 export default function Profile() {
@@ -49,7 +49,7 @@ export default function Profile() {
           <div className="relative mx-auto mb-4 h-24 w-24">
             {user?.profilePhoto ? (
               <img
-                src={`https://dpr-system.onrender.com${user.profilePhoto}`}
+                src={getProfilePhotoUrl(user.profilePhoto)}
                 alt=""
                 className="h-24 w-24 rounded-full object-cover"
               />

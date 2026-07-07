@@ -10,6 +10,14 @@ import { TableSkeleton } from '../../components/ui/LoadingSkeleton';
 import { Download, FileText, ChevronDown, ChevronRight } from 'lucide-react';
 import { formatDate, downloadBlob } from '../../utils/helpers';
 
+const METRIC_LABELS = [
+  { key: 'longApp', label: 'Long Apps' },
+  { key: 'shortApp', label: 'Short Apps' },
+  { key: 'availability', label: 'Availability' },
+  { key: 'screening', label: 'Screening' },
+  { key: 'assessment', label: 'Assessment' },
+];
+
 export default function AdminReports() {
   const [reports, setReports] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, pages: 1 });
@@ -50,92 +58,119 @@ export default function AdminReports() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold">DPR Reports</h1>
-          <p className="text-gray-500">{PERIOD_LABELS[period]} — grouped by employee</p>
+          <h1 className="text-xl font-bold sm:text-2xl">DPR Reports</h1>
+          <p className="text-sm text-gray-500 sm:text-base">{PERIOD_LABELS[period]} — grouped by employee</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={exportCSV}><Download className="h-4 w-4" /> CSV</Button>
-          <Button variant="outline" onClick={exportPDF}><FileText className="h-4 w-4" /> PDF</Button>
+          <Button variant="outline" className="flex-1 sm:flex-none" onClick={exportCSV}>
+            <Download className="h-4 w-4" /> CSV
+          </Button>
+          <Button variant="outline" className="flex-1 sm:flex-none" onClick={exportPDF}>
+            <FileText className="h-4 w-4" /> PDF
+          </Button>
         </div>
       </div>
 
       <Card>
         <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <PeriodFilter value={period} onChange={setPeriod} />
-          <div className="flex-1 sm:max-w-xs">
+          <div className="w-full sm:max-w-xs sm:flex-1">
             <SearchBar value={search} onChange={setSearch} placeholder="Search employee or candidate..." />
           </div>
         </div>
 
         {loading ? <TableSkeleton /> : (
-          <div className="space-y-2">
+          <div className="space-y-3">
             {reports.map((group) => {
               const key = `${group.employee?._id}_${formatDate(group.date)}`;
               const isOpen = expanded[key];
               return (
-                <div key={key} className="rounded-lg border dark:border-gray-700">
+                <div key={key} className="overflow-hidden rounded-lg border dark:border-gray-700">
                   <button
+                    type="button"
                     onClick={() => toggleExpand(key)}
-                    className="flex w-full items-center justify-between p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-800"
+                    className="flex w-full flex-col gap-2 p-3 text-left hover:bg-gray-50 dark:hover:bg-gray-800 sm:flex-row sm:items-center sm:justify-between sm:p-4"
                   >
-                    <div className="flex items-center gap-3">
-                      {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                      <div>
-                        <p className="font-semibold">{group.employee?.fullName} ({group.employee?.employeeId})</p>
-                        <p className="text-sm text-gray-500">
+                    <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+                      {isOpen ? <ChevronDown className="h-4 w-4 shrink-0" /> : <ChevronRight className="h-4 w-4 shrink-0" />}
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold">
+                          {group.employee?.fullName} ({group.employee?.employeeId})
+                        </p>
+                        <p className="text-xs text-gray-500 sm:text-sm">
                           {period === 'daily' ? formatDate(group.date) : `${group.candidates.length} report(s)`}
                           {' · '}{[...new Set(group.candidates.map((c) => c.candidate?.name))].length} candidate(s)
                         </p>
                       </div>
                     </div>
-                    <div className="hidden gap-4 text-sm sm:flex">
-                      <span>Long Apps: <strong>{group.totals.longApp ?? 0}</strong></span>
-                      <span>Short Apps: <strong>{group.totals.shortApp ?? 0}</strong></span>
-                      <span>Availability: <strong>{group.totals.availability ?? 0}</strong></span>
-                      <span>Screening: <strong>{group.totals.screening ?? 0}</strong></span>
-                      <span>Assessment: <strong>{group.totals.assessment ?? 0}</strong></span>
+                    <div className="flex flex-wrap gap-x-3 gap-y-1 pl-6 text-xs sm:pl-0 sm:gap-4 sm:text-sm">
+                      {METRIC_LABELS.map(({ key: metricKey, label }) => (
+                        <span key={metricKey}>
+                          {label}: <strong>{group.totals[metricKey] ?? 0}</strong>
+                        </span>
+                      ))}
                     </div>
                   </button>
                   {isOpen && (
                     <div className="border-t dark:border-gray-700">
-                      <table className="w-full text-sm">
-                        <thead className="bg-gray-50 dark:bg-gray-800">
-                          <tr>
-                            {period !== 'daily' && <th className="px-4 py-2 text-left">Date</th>}
-                            <th className="px-4 py-2 text-left">Candidate</th>
-                            <th className="px-4 py-2 text-left">Job Role</th>
-                            <th className="px-4 py-2 text-left">Long Apps</th>
-                            <th className="px-4 py-2 text-left">Short Apps</th>
-                            <th className="px-4 py-2 text-left">Availability</th>
-                            <th className="px-4 py-2 text-left">Screening</th>
-                            <th className="px-4 py-2 text-left">Assessment</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {group.candidates.map((c) => (
-                            <tr key={c._id} className="border-t dark:border-gray-800">
-                              {period !== 'daily' && <td className="px-4 py-2">{formatDate(c.date)}</td>}
-                              <td className="px-4 py-2 font-medium">{c.candidate?.name}</td>
-                              <td className="px-4 py-2">{c.candidate?.jobRole}</td>
-                              <td className="px-4 py-2">{c.longApp ?? 0}</td>
-                              <td className="px-4 py-2">{c.shortApp ?? 0}</td>
-                              <td className="px-4 py-2">{c.availability ?? 0}</td>
-                              <td className="px-4 py-2">{c.screening ?? 0}</td>
-                              <td className="px-4 py-2">{c.assessment ?? 0}</td>
+                      {/* Mobile: card list */}
+                      <div className="space-y-2 p-3 sm:hidden">
+                        {group.candidates.map((c) => (
+                          <div key={c._id} className="rounded-lg bg-gray-50 p-3 dark:bg-gray-800/50">
+                            {period !== 'daily' && (
+                              <p className="text-xs text-gray-500">{formatDate(c.date)}</p>
+                            )}
+                            <p className="font-medium">{c.candidate?.name}</p>
+                            <p className="text-xs text-gray-500">{c.candidate?.jobRole}</p>
+                            <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
+                              {METRIC_LABELS.map(({ key: metricKey, label }) => (
+                                <div key={metricKey}>
+                                  <span className="text-gray-500">{label}</span>
+                                  <p className="font-semibold">{c[metricKey] ?? 0}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Desktop: table */}
+                      <div className="hidden overflow-x-auto sm:block">
+                        <table className="w-full text-sm">
+                          <thead className="bg-gray-50 dark:bg-gray-800">
+                            <tr>
+                              {period !== 'daily' && <th className="px-4 py-2 text-left">Date</th>}
+                              <th className="px-4 py-2 text-left">Candidate</th>
+                              <th className="px-4 py-2 text-left">Job Role</th>
+                              {METRIC_LABELS.map(({ key: metricKey, label }) => (
+                                <th key={metricKey} className="px-4 py-2 text-left">{label}</th>
+                              ))}
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                          </thead>
+                          <tbody>
+                            {group.candidates.map((c) => (
+                              <tr key={c._id} className="border-t dark:border-gray-800">
+                                {period !== 'daily' && <td className="px-4 py-2">{formatDate(c.date)}</td>}
+                                <td className="px-4 py-2 font-medium">{c.candidate?.name}</td>
+                                <td className="px-4 py-2">{c.candidate?.jobRole}</td>
+                                {METRIC_LABELS.map(({ key: metricKey }) => (
+                                  <td key={metricKey} className="px-4 py-2">{c[metricKey] ?? 0}</td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
                   )}
                 </div>
               );
             })}
             {reports.length === 0 && (
-              <p className="py-8 text-center text-gray-500">
+              <p className="py-8 text-center text-sm text-gray-500 sm:text-base">
                 No reports found for {period === 'daily' ? 'today' : period === 'weekly' ? 'this week' : 'this month'}
               </p>
             )}
