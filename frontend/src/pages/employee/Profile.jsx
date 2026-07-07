@@ -49,7 +49,7 @@ export default function Profile() {
           <div className="relative mx-auto mb-4 h-24 w-24">
             {user?.profilePhoto ? (
               <img
-                src={`${import.meta.env.VITE_API_URL}${user.profilePhoto}`}
+                src={`https://dpr-system.onrender.com${user.profilePhoto}`}
                 alt=""
                 className="h-24 w-24 rounded-full object-cover"
               />
